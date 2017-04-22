@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ch">
+
+<head>
+    <meta charset="UTF-8">
+    <title>贪吃蛇</title>
+    <style>
+    html,
+        body,
+        ul,
+        li,
+        ol,
+        dl,
+        dd,
+        dt,
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        form,
+        fieldset,
+        legend,
+        img {
+            margin: 0;
+            padding: 0;
+        }
+    }
+    ul {
+        list-style: none;
+    }
+    .snake {
+        position: relative;
+        list-style: none;
+    }
+    .snake li {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: green;
+        top: 0;
+        left: 0;
+    }
+    .btn {
+        width: 100px;
+        height: 30px;
+        position: absolute;
+        right: 250px;
+        top: 0;
+    }
+    .btn2 {
+        width: 100px;
+        height: 30px;
+        position: absolute;
+        right: 250px;
+        top: 50px;
+    }
+    .btn3 {
+        width: 100px;
+        height: 30px;
+        position: absolute;
+        right: 250px;
+        top: 100px;
+    }
+    .btn4 {
+        width: 100px;
+        height: 30px;
+        position: absolute;
+        right: 250px;
+        top: 150px;
+    }
+    .btn5 {
+        width: 100px;
+        height: 30px;
+        position: absolute;
+        right: 250px;
+        top: 200px;
+    }
+    .w {
+        margin-left: 370px;
+        width: 600px;
+        height: 400px;
+        border: 10px solid #000;
+        /*background-image: url("01.jpg");*/
+    }
+    .food {
+        width: 10px;
+        height: 10px;
+        background-color: red;
+        position: absolute;
+    }
+    </style>
+</head>
+
+<body>
+    <ul class="snake" id="snake">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+    <div class="w box" id="box"></div>
+    <input id="btn1" class="btn" type="button" value="开始" />
+    <input id="btn2" class="btn2" type="button" value="结束" />
+    <input id="btn3" class="btn3" type="button" value="食物" />
+    <input id="btn4" class="btn4" type="button" value="步进" />
+    <input id="btn5" class="btn5" type="button" value="困难模式" />
+
+    <h1>得分:</h1>
+</body>
+<script>
+    //    window.localStorage.clear();
+    var snake = document.getElementById("snake");
+    var ulLis = snake.children;
+    var btn1 = document.getElementById('btn1')
+    var btn2 = document.getElementById('btn2')
+    var btn3 = document.getElementById('btn3')
+    var btn4 = document.getElementById('btn4')
+    var btn5 = document.getElementById('btn5')
+    var dir = "right";
+    var timer = null;
+    var box = document.getElementById("box")
+    var foodtop
+    var foodleft
+    var food = null;
+    var speed = 100;
+    var period = 0;
+    var score = 0;
+    var gameOver = false;
+    var h1 = document.querySelector("h1");
+    var scoreHistory = window.localStorage.getItem("score");
+    if (!scoreHistory) {
+        scoreHistory = "0";
+    }
+    //    初始化
+    for (var i = ulLis.length - 1; i > -1; i--) {
+        ulLis[i].style.left = 380 + (ulLis.length - i - 1) * 10 + "px";
+        ulLis[i].style.top = 10 + "px"
+    }
+    //    移动
+    function move() {
+        switch (dir) {
+            case "left":
+                ulLis[ulLis.length - 1].style.top = ulLis[0].offsetTop + "px";
+                ulLis[ulLis.length - 1].style.left = ulLis[0].offsetLeft - 10 + "px";
+                snake.insertBefore(ulLis[ulLis.length - 1], ulLis[0])
+                break;
+            case "right":
+                ulLis[ulLis.length - 1].style.top = ulLis[0].offsetTop + "px";
+                ulLis[ulLis.length - 1].style.left = ulLis[0].offsetLeft + 10 + "px";
+                snake.insertBefore(ulLis[ulLis.length - 1], ulLis[0])
+                break;
+            case "up":
+                ulLis[ulLis.length - 1].style.left = ulLis[0].offsetLeft + "px";
+                ulLis[ulLis.length - 1].style.top = ulLis[0].offsetTop - 10 + "px";
+                snake.insertBefore(ulLis[ulLis.length - 1], ulLis[0])
+                break;
+            case "down":
+                ulLis[ulLis.length - 1].style.left = ulLis[0].offsetLeft + "px";
+                ulLis[ulLis.length - 1].style.top = ulLis[0].offsetTop + 10 + "px";
+                snake.insertBefore(ulLis[ulLis.length - 1], ulLis[0])
+                break;
+        }
+    }
+    //    检查蛇头朝向
+    function direction() {
+        var fLeft = ulLis[0].style.left
+        var sLeft = ulLis[1].style.left
+        var fTop = ulLis[0].style.top
+        var sTop = ulLis[1].style.top
+        if (fLeft == sLeft) {
+            if (fTop > sTop) {
+                return "right";
+            } else {
+                return "left"
+            }
+        } else {
+            if (fLeft > sLeft) {
+                return "up";
+            } else {
+                return "down"
+            }
+        }
+    }
+    btn1.onclick = function() {
+        clearInterval(timer)
+        setTimeout(createfood, period)
+        timer = setInterval(function() {
+            move();
+            check();
+            eat()
+        }, speed)
+    }
+    btn2.onclick = function() {
+            clearInterval(timer)
+        }
+        //    随机生成食物
+    btn3.onclick = function() {
+        createfood()
+    }
+    btn4.onclick = function() {
+        move();
+        check();
+    }
+    btn5.onclick = function() {
+            clearInterval(timer)
+            setTimeout(createfood, period)
+            timer = setInterval(function() {
+                move();
+                eat()
+                check();
+            }, speed / 2)
+        }
+        //    记录键盘按下
+    document.onkeydown = function(event) {
+        var e = event || window.event || arguments.callee.caller.arguments[0];
+        switch (e && e.keyCode) {
+            case 37:
+                if (dir !== "right") {
+                    dir = "left"
+                }
+                break;
+            case 38:
+                if (dir !== "down") {
+                    dir = "up"
+                }
+                break;
+            case 39:
+                if (dir !== "left") {
+                    dir = "right"
+                }
+                break;
+            case 40:
+                if (dir !== "up") {
+                    dir = "down"
+                }
+                break;
+            default:
+                console.log("其他");
+        }
+    };
+    //    创造食物
+    function createfood() {
+        if (!food) {
+            food = document.createElement("div");
+            food.className = "food";
+            box.appendChild(food)
+            var flag
+            do {
+                flag = true;
+                var foodtop = 10 + parseInt(Math.random() * 40) * 10
+                var foodleft = 380 + parseInt(Math.random() * 60) * 10
+                for (var i = ulLis.length - 1; i > -1; i--) {
+                    if (ulLis[i].offsetLeft == foodleft && ulLis[i].offsetTop == foodtop) {
+                        flag = false;
+                        break;
+                    }
+                }
+                if (flag) {
+                    food.style.top = foodtop + "px"
+                    food.style.left = foodleft + "px"
+                    break;
+                }
+            } while (!flag)
+        }
+    }
+    //    吃掉食物 增加长度
+    function eat() {
+        if (food && ulLis[0].offsetLeft == food.offsetLeft && ulLis[0].offsetTop == food.offsetTop) {
+            box.removeChild(box.children[0]);
+            var li = document.createElement("li");
+            snake.appendChild(li);
+            food = null;
+            setTimeout(createfood, period)
+        }
+    }
+    //    死亡判断
+    //    1碰壁
+    function check() {
+        if (ulLis[0].offsetTop < 10 || ulLis[0].offsetTop > 400 || ulLis[0].offsetLeft < 380 || ulLis[0].offsetLeft > 970) {
+            gameOver = true;
+        }
+        //        2自吃
+        for (i = 1; i < ulLis.length; i++) {
+            if (ulLis[0].offsetLeft == ulLis[i].offsetLeft && ulLis[0].offsetTop == ulLis[i].offsetTop) {
+                gameOver = true;
+            }
+        }
+        //        3加速
+
+        if (ulLis.length > 10) {
+            speed = 70;
+        }
+        if (ulLis.length > 20) {
+            speed = 60;
+        }
+        if (ulLis.length > 40) {
+            speed = 50;
+        }
+        if (ulLis.length > 100) {
+            speed = 30;
+        }
+        if (ulLis.length > 200) {
+            speed = 40;
+        }
+        //        4得分判断
+        score = (ulLis.length - 4) * 100;
+        h1.innerHTML = "得分:" + score
+            //        5游戏结束
+        if (gameOver) {
+            arr = scoreHistory.split(",");
+            arr.push(score);
+            //        计算历史最高分
+            var highScore = arr[0];
+            arr.forEach(function(e) {
+                if (e > highScore) {
+                    highScore = e;
+                }
+            })
+            scoreHistory = arr.join(",");
+            window.localStorage.setItem("score", scoreHistory);
+            alert("游戏结束  当前得分：" + score + "  历史最高得分:" + highScore)
+            location.reload()
+        }
+    }
+</script>
+
+</html>
